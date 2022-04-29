@@ -127,7 +127,9 @@ namespace squittal.ScrimPlanetmans.Services
                 var files = Directory.GetFiles(directoryPath, "*.sql");
 
                 foreach (var file in files) {
+                    _logger.LogDebug($"Running {file}");
                     RunSqlScript(file, true);
+                    _logger.LogInformation($"Ran {file}");
                 }
             }
             catch (Exception ex)
