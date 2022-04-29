@@ -11,25 +11,14 @@ namespace squittal.ScrimPlanetmans.Logging
         public static IEnumerable<string> GetAdHocSqlFileNames()
         {
             var basePath = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
-            var adhocScriptDirectory = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", "..\\sql_adhoc"));
-
-            var scripts = new List<string>();
+            var adhocScriptDirectory = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", "../sql_adhoc"));
 
             try
             {
-                var files = Directory.GetFiles(adhocScriptDirectory);
-
-                foreach (var file in files)
-                {
-                    if (!file.EndsWith(".sql"))
-                    {
-                        continue;
-                    }
-
-                    scripts.Add(Path.GetFileName(file));
-                }
-
-                return scripts.OrderBy(f => f).ToList();
+                return Directory.GetFiles(adhocScriptDirectory)
+                    .Where(iter => iter.EndsWith(".sql"))
+                    .Select(iter => Path.GetFileName(iter))
+                    .OrderBy(f => f).ToList();
             }
             catch
             {

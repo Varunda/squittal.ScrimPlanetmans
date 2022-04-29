@@ -8,11 +8,11 @@ namespace squittal.ScrimPlanetmans.Logging
         public static bool WriteToLogFile(string fileName, string logMessage)
         {
             var basePath = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
-            var matchLogsDirectory = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", "..\\match_logs"));
+            var matchLogsDirectory = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", "../match_logs"));
 
             try
             {
-                FileStream fileStream = new FileStream($"{matchLogsDirectory}\\{fileName}", FileMode.Append, FileAccess.Write);
+                FileStream fileStream = new FileStream($"{matchLogsDirectory}/{fileName}", FileMode.Append, FileAccess.Write);
             
                 StreamWriter streamWriter = new StreamWriter(fileStream);
             

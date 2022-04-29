@@ -25,7 +25,7 @@ namespace squittal.ScrimPlanetmans.Services.Planetside
         
         private ConcurrentDictionary<int, ItemCategory> WeaponCategoriesMap { get; set; } = new ConcurrentDictionary<int, ItemCategory>();
         private readonly SemaphoreSlim _weaponCategoryMapSetUpSemaphore = new SemaphoreSlim(1);
-        public string BackupSqlScriptFileName => "CensusBackups\\dbo.ItemCategory.Table.sql";
+        public string BackupSqlScriptFileName => "CensusBackups/dbo.ItemCategory.Table.sql";
 
         public event EventHandler<StoreRefreshMessageEventArgs> RaiseStoreRefreshEvent;
         public delegate void StoreRefreshMessageEventHandler(object sender, StoreRefreshMessageEventArgs e);

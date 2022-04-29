@@ -7,7 +7,7 @@ namespace squittal.ScrimPlanetmans.Services
 {
     public class SqlScriptRunner : ISqlScriptRunner
     {
-        private readonly string _sqlDirectory = "Data\\SQL";
+        private readonly string _sqlDirectory = "Data/SQL";
         private readonly string _basePath;
         private readonly string _scriptDirectory;
         private readonly string _adhocScriptDirectory;
@@ -23,7 +23,7 @@ namespace squittal.ScrimPlanetmans.Services
             _basePath = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
             _scriptDirectory = Path.Combine(_basePath, _sqlDirectory);
 
-            _adhocScriptDirectory = Path.GetFullPath(Path.Combine(_basePath, "..", "..", "..", "..\\sql_adhoc"));
+            _adhocScriptDirectory = Path.GetFullPath(Path.Combine(_basePath, "..", "..", "..", "../sql_adhoc"));
         }
 
         public void RunSqlScript(string fileName, bool minimalLogging = false)
@@ -86,15 +86,9 @@ namespace squittal.ScrimPlanetmans.Services
 
             try
             {
-                var files = Directory.GetFiles(directoryPath);
+                var files = Directory.GetFiles(directoryPath, "*.sql");
 
-                foreach (var file in files)
-                {
-                    if (!file.EndsWith(".sql"))
-                    {
-                        continue;
-                    }
-
+                foreach (var file in files) {
                     RunSqlScript(file, true);
                 }
             }
