@@ -7,6 +7,7 @@ using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace squittal.ScrimPlanetmans.Services
 {
@@ -124,7 +125,10 @@ namespace squittal.ScrimPlanetmans.Services
 
             try
             {
-                var files = Directory.GetFiles(directoryPath, "*.sql");
+                var files = Directory.GetFiles(directoryPath)
+                    .Where(iter => iter.EndsWith(".sql"))
+                    .OrderBy(f => f)
+                    .ToArray();
 
                 foreach (var file in files) {
                     _logger.LogDebug($"Running {file}");
