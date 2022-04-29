@@ -3,6 +3,8 @@ using System.IO;
 using Microsoft.SqlServer.Management.Smo;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace squittal.ScrimPlanetmans.Services
 {
@@ -13,7 +15,7 @@ namespace squittal.ScrimPlanetmans.Services
         private readonly string _scriptDirectory;
         private readonly string _adhocScriptDirectory;
 
-        private readonly Server _server; // = new Server("(LocalDB)\\MSSQLLocalDB");
+        private readonly Server _server;
 
         private readonly ILogger<SqlScriptRunner> _logger;
 
@@ -23,7 +25,9 @@ namespace squittal.ScrimPlanetmans.Services
 
             _basePath = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
             _scriptDirectory = Path.Combine(_basePath, _sqlDirectory);
-            _server = new Server(config.GetConnectionString("PlanetmansDbContext"));
+
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(config.GetConnectionString("PlanetmansDbContext"));
+            _server = new Server(builder.DataSource);
 
             _adhocScriptDirectory = Path.GetFullPath(Path.Combine(_basePath, "..", "..", "..", "../sql_adhoc"));
         }
@@ -37,7 +41,7 @@ namespace squittal.ScrimPlanetmans.Services
                 var scriptFileInfo = new FileInfo(scriptPath);
 
                 string scriptText = scriptFileInfo.OpenText().ReadToEnd();
-                
+
                 _server.ConnectionContext.ExecuteNonQuery(scriptText);
 
                 if (!minimalLogging)
@@ -65,8 +69,7 @@ namespace squittal.ScrimPlanetmans.Services
 
                 info = $"Successfully ran sql script at {scriptPath}";
 
-                if (!minimalLogging)
-                {
+                if (!minimalLogging) {
                     _logger.LogInformation(info);
                 }
 
