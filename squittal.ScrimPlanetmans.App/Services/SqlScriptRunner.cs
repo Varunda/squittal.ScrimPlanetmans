@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace squittal.ScrimPlanetmans.Services
 {
@@ -15,7 +17,9 @@ namespace squittal.ScrimPlanetmans.Services
         private readonly string _scriptDirectory;
         private readonly string _adhocScriptDirectory;
 
-        private readonly Server _server;
+        private readonly Server _server; // = new Server("(LocalDB)\\MSSQLLocalDB");
+
+        private readonly string _ConnectionString;
 
         private readonly ILogger<SqlScriptRunner> _logger;
 
@@ -23,13 +27,39 @@ namespace squittal.ScrimPlanetmans.Services
         {
             _logger = logger;
 
+            _ConnectionString = config.GetConnectionString("PlanetmansDbContext");
+
             _basePath = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
             _scriptDirectory = Path.Combine(_basePath, _sqlDirectory);
 
-            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(config.GetConnectionString("PlanetmansDbContext"));
-            _server = new Server(builder.DataSource);
+            //SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(config.GetConnectionString("PlanetmansDbContext"));
+            //_server = new Server(builder.DataSource);
 
             _adhocScriptDirectory = Path.GetFullPath(Path.Combine(_basePath, "..", "..", "..", "../sql_adhoc"));
+        }
+
+        private void RunCommand(string text) {
+
+            IEnumerable<string> commandStrings = Regex.Split(text, @"^\s*GO\s*$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+            using (SqlConnection connection = new SqlConnection(_ConnectionString)) {
+                connection.Open();
+                
+                foreach (string commandString in commandStrings) {
+                    if (commandString.Trim() != "") {
+                        using (var command = new SqlCommand(commandString, connection)) {
+                            command.ExecuteNonQuery();
+                            /*
+                            try {
+                            } catch (SqlException ex) { 
+                                string spError = commandString.Length > 100 ? commandString.Substring(0, 100) + " ...\n..." : commandString;
+                                //MessageBox.Show(string.Format("Please check the SqlServer script.\nFile: {0} \nLine: {1} \nError: {2} \nSQL Command: \n{3}", pathStoreProceduresFile, ex.LineNumber, ex.Message, spError), "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            }
+                            */
+                        }
+                    }
+                }
+            }
         }
 
         public void RunSqlScript(string fileName, bool minimalLogging = false)
@@ -42,7 +72,9 @@ namespace squittal.ScrimPlanetmans.Services
 
                 string scriptText = scriptFileInfo.OpenText().ReadToEnd();
 
-                _server.ConnectionContext.ExecuteNonQuery(scriptText);
+                //_server.ConnectionContext.ExecuteNonQuery(scriptText);
+
+                RunCommand(scriptText);
 
                 if (!minimalLogging)
                 {
@@ -65,7 +97,8 @@ namespace squittal.ScrimPlanetmans.Services
 
                 string scriptText = scriptFileInfo.OpenText().ReadToEnd();
 
-                _server.ConnectionContext.ExecuteNonQuery(scriptText);
+                RunCommand(scriptText);
+                //_server.ConnectionContext.ExecuteNonQuery(scriptText);
 
                 info = $"Successfully ran sql script at {scriptPath}";
 
