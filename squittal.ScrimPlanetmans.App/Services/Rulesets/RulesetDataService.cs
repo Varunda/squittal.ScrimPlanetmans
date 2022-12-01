@@ -670,17 +670,17 @@ namespace squittal.ScrimPlanetmans.Services.Rulesets
         #region SAVE / UPDATE methods
         public async Task<bool> UpdateRulesetInfo(Ruleset rulesetUpdate, CancellationToken cancellationToken)
         {
-            var updateId = rulesetUpdate.Id;
+            int updateId = rulesetUpdate.Id;
 
-            if (updateId == DefaultRulesetId || rulesetUpdate.IsDefault)
-            {
+            if (updateId == DefaultRulesetId || rulesetUpdate.IsDefault) {
+                _logger.LogWarning($"Not updating Ruleset {updateId}: it is the default ruleset");
                 return false;
             }
 
-            var updateName = rulesetUpdate.Name;
-            var updateRoundLength = rulesetUpdate.DefaultRoundLength;
-            var updateMatchTitle = rulesetUpdate.DefaultMatchTitle;
-            var updateEndRoundOnFacilityCapture = rulesetUpdate.DefaultEndRoundOnFacilityCapture;
+            string updateName = rulesetUpdate.Name;
+            int updateRoundLength = rulesetUpdate.DefaultRoundLength;
+            string updateMatchTitle = rulesetUpdate.DefaultMatchTitle;
+            bool updateEndRoundOnFacilityCapture = rulesetUpdate.DefaultEndRoundOnFacilityCapture;
 
             Ruleset oldRuleset = new Ruleset();
 
@@ -705,10 +705,10 @@ namespace squittal.ScrimPlanetmans.Services.Rulesets
             {
                 try
                 {
-                    using var factory = _dbContextHelper.GetFactory();
-                    var dbContext = factory.GetDbContext();
+                    using DbContextHelper.DbContextFactory factory = _dbContextHelper.GetFactory();
+                    PlanetmansDbContext dbContext = factory.GetDbContext();
 
-                    var storeEntity = await GetRulesetFromIdAsync(updateId, cancellationToken, false, false);
+                    Ruleset storeEntity = await GetRulesetFromIdAsync(updateId, cancellationToken, false, false);
 
                     if (storeEntity == null)
                     {
@@ -733,7 +733,7 @@ namespace squittal.ScrimPlanetmans.Services.Rulesets
 
                     await SetUpRulesetsMapAsync(cancellationToken);
 
-                    var changeMessage = new RulesetSettingChangeMessage(storeEntity, oldRuleset);
+                    RulesetSettingChangeMessage changeMessage = new RulesetSettingChangeMessage(storeEntity, oldRuleset);
                     _messageService.BroadcastRulesetSettingChangeMessage(changeMessage);
 
                     _logger.LogInformation($"{changeMessage.Info}");
@@ -1190,9 +1190,13 @@ namespace squittal.ScrimPlanetmans.Services.Rulesets
 
         private async Task<Ruleset> CreateRulesetAsync(Ruleset ruleset)
         {
-            if (!IsValidRulesetName(ruleset.Name) || ruleset.IsDefault
-                || !IsValidRulesetDefaultRoundLength(ruleset.DefaultRoundLength) || !IsValidRulesetDefaultMatchTitle(ruleset.DefaultMatchTitle))
-            {
+            if (!IsValidRulesetName(ruleset.Name)
+                || ruleset.IsDefault
+                || !IsValidRulesetDefaultRoundLength(ruleset.DefaultRoundLength)
+                || !IsValidRulesetDefaultMatchTitle(ruleset.DefaultMatchTitle)) {
+
+                _logger.LogWarning($"Ruleset {ruleset.Id} is invalid, not creating");
+
                 return null;
             }
 
@@ -1200,8 +1204,8 @@ namespace squittal.ScrimPlanetmans.Services.Rulesets
             {
                 try
                 {
-                    using var factory = _dbContextHelper.GetFactory();
-                    var dbContext = factory.GetDbContext();
+                    using DbContextHelper.DbContextFactory factory = _dbContextHelper.GetFactory();
+                    PlanetmansDbContext dbContext = factory.GetDbContext();
 
                     if (ruleset.DateCreated == default(DateTime))
                     {
