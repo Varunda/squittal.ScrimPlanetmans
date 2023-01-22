@@ -72,7 +72,9 @@ ALTER VIEW View_ScrimMatchReportInfantryPlayerStats AS
          COALESCE( damage_sums.DamageAssistsAsMax, 0 ) DamageAssistsAsMax,
          CAST( ROUND( COALESCE( kill_sums.KillDamageDealt, 0 ), 0 ) AS int ) KillDamageDealt,
          CAST( ROUND( COALESCE( damage_sums.AssistDamageDealt, 0 ), 0 ) AS int ) AssistDamageDealt,
-         CAST( ROUND( COALESCE( kill_sums.KillDamageDealt, 0 ) + COALESCE( damage_sums.AssistDamageDealt, 0 ), 0 ) AS int ) TotalDamageDealt
+         CAST( ROUND( COALESCE( kill_sums.KillDamageDealt, 0 ) + COALESCE( damage_sums.AssistDamageDealt, 0 ), 0 ) AS int ) TotalDamageDealt,
+         COALESCE(revive_sums.Revives, 0) Revives,
+         COALESCE(revive_sums.Revived, 0) Revived
     FROM [PlanetmansDbContext].[dbo].ScrimMatchParticipatingPlayer match_players
       LEFT OUTER JOIN ( SELECT match_players.ScrimMatchId,
                                 MAX( match_players.TeamOrdinal ) TeamOrdinal,
@@ -106,7 +108,6 @@ ALTER VIEW View_ScrimMatchReportInfantryPlayerStats AS
                                            THEN CASE WHEN kills.VictimLoadoutId IN ( 1, 8, 15) THEN 900
                                                      ELSE 1000 END
                                          ELSE 0 END ) KillDamageDealt,
-                            
                                 SUM( CASE WHEN CharacterId = kills.VictimCharacterId AND DeathType IN ( 0, 1, 2) THEN 1 ELSE 0 END ) Deaths,
                                 SUM( CASE WHEN CharacterId = kills.VictimCharacterId AND DeathType = 1 THEN 1 ELSE 0 END ) TeamKillDeaths,
                                 SUM( CASE WHEN CharacterId = kills.VictimCharacterId AND DeathType = 2 THEN 1 ELSE 0 END ) Suicides,
@@ -209,3 +210,16 @@ ALTER VIEW View_ScrimMatchReportInfantryPlayerStats AS
                           GROUP BY match_players.ScrimMatchId, match_players.CharacterId ) damage_sums
                 ON match_players.ScrimMatchId = damage_sums.ScrimMatchId 
                   AND match_players.CharacterId = damage_sums.CharacterId
+
+	LEFT OUTER JOIN (
+			SELECT 
+				match_players.ScrimMatchId,
+				match_players.CharacterId,
+                SUM (CASE WHEN CharacterId = revives.MedicCharacterId THEN 1 ELSE 0 END) Revives,
+                SUM (CASE WHEN CharacterId = revives.RevivedCharacterId THEN 1 ELSE 0 END) Revived
+			FROM [PlanetmansDbContext].[dbo].ScrimMatchParticipatingPlayer match_players
+				INNER JOIN [PlanetmansDbContext].[dbo].ScrimRevive revives ON match_players.ScrimMatchId = revives.ScrimMatchId
+					AND match_players.CharacterId = revives.MedicCharacterId
+			GROUP BY match_players.ScrimMatchId, match_players.CharacterId
+        ) revive_sums ON match_players.ScrimMatchId = revive_sums.ScrimMatchId
+            AND match_players.CharacterId = revive_sums.CharacterId

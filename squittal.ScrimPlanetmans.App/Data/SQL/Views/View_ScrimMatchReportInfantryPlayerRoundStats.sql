@@ -73,7 +73,9 @@ ALTER VIEW View_ScrimMatchReportInfantryPlayerRoundStats AS
          COALESCE( damage_sums.DamageAssistsAsMax, 0 ) DamageAssistsAsMax,
          CAST( ROUND( COALESCE( kill_sums.KillDamageDealt, 0 ), 0 ) AS int ) KillDamageDealt,
          CAST( ROUND( COALESCE( damage_sums.AssistDamageDealt, 0 ), 0 ) AS int ) AssistDamageDealt,
-         CAST( ROUND( COALESCE( kill_sums.KillDamageDealt, 0 ) + COALESCE( damage_sums.AssistDamageDealt, 0 ), 0 ) AS int ) TotalDamageDealt
+         CAST( ROUND( COALESCE( kill_sums.KillDamageDealt, 0 ) + COALESCE( damage_sums.AssistDamageDealt, 0 ), 0 ) AS int ) TotalDamageDealt,
+         0 as Revives,
+         0 as Revived
     FROM [PlanetmansDbContext].[dbo].ScrimMatchParticipatingPlayer match_players
       INNER JOIN [PlanetmansDbContext].[dbo].ScrimMatchRoundConfiguration match_rounds
         ON match_players.ScrimMatchId = match_rounds.ScrimMatchId

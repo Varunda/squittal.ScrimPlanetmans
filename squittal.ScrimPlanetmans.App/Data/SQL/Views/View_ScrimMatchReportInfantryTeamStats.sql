@@ -71,7 +71,9 @@ ALTER VIEW View_ScrimMatchReportInfantryTeamStats AS
          MAX( COALESCE( damage_sums.DamageAssistsAsMax, 0 ) ) DamageAssistsAsMax,
          CAST( MAX( ROUND( COALESCE( kill_sums.KillDamageDealt, 0 ), 0 ) ) AS int ) KillDamageDealt,
          CAST( MAX( ROUND( COALESCE( damage_sums.AssistDamageDealt, 0 ), 0 ) ) AS int ) AssistDamageDealt,
-         CAST( MAX( ROUND( COALESCE( kill_sums.KillDamageDealt, 0 ) + COALESCE( damage_sums.AssistDamageDealt, 0 ), 0 ) ) AS int ) TotalDamageDealt
+         CAST( MAX( ROUND( COALESCE( kill_sums.KillDamageDealt, 0 ) + COALESCE( damage_sums.AssistDamageDealt, 0 ), 0 ) ) AS int ) TotalDamageDealt,
+         MAX(COALESCE(revive_sums.Revives, 0)) as Revives,
+         MAX(COALESCE(revive_sums.Revived, 0)) as Revived
     FROM ( SELECT match_players.ScrimMatchId,
                   match_players.TeamOrdinal
              FROM [PlanetmansDbContext].[dbo].ScrimMatchParticipatingPlayer match_players
@@ -251,4 +253,15 @@ ALTER VIEW View_ScrimMatchReportInfantryTeamStats AS
                           GROUP BY captures.ScrimMatchId, captures.ControllingTeamOrdinal ) capture_sums
         ON match_teams.ScrimMatchId = capture_sums.ScrimMatchId
            AND match_teams.TeamOrdinal = capture_sums.TeamOrdinal
+      LEFT OUTER JOIN ( SELECT match_players.ScrimMatchId,
+                               match_players.TeamOrdinal,
+                               SUM( CASE WHEN CharacterId = revives.MedicCharacterId THEN 1 ELSE 0 END ) Revives,
+                               SUM( CASE WHEN CharacterId = revives.RevivedCharacterId THEN 1 ELSE 0 END ) Revived
+                          FROM [PlanetmansDbContext].[dbo].ScrimMatchParticipatingPlayer match_players
+                            INNER JOIN [PlanetmansDbContext].[dbo].ScrimRevive revives
+                              ON match_players.ScrimMatchId = revives.ScrimMatchId
+                                 AND  match_players.CharacterId = revives.MedicCharacterId
+                          GROUP BY match_players.ScrimMatchId, match_players.TeamOrdinal ) revive_sums
+        ON match_teams.ScrimMatchId = revive_sums.ScrimMatchId 
+          AND match_teams.TeamOrdinal = revive_sums.TeamOrdinal
   GROUP BY match_teams.ScrimMatchId, match_teams.TeamOrdinal

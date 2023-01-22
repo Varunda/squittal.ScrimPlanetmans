@@ -54,6 +54,16 @@ namespace squittal.ScrimPlanetmans.Models.ScrimMatchReports
         public int AssistDamageDealt { get; set; }
         public int TotalDamageDealt { get; set; }
 
+        /// <summary>
+        /// How many revives given
+        /// </summary>
+        public int Revives { get; set; }
+
+        /// <summary>
+        /// How many times revived by another player
+        /// </summary>
+        public int Revived { get; set; }
+
 
         #region Class-Specific Stats
         public int KillsAsHeavyAssault { get; set; }
