@@ -2,13 +2,12 @@ USE [PlanetmansDbContext_Conquest];
 
 IF (NOT EXISTS (SELECT 1 FROM sys.views WHERE name = 'View_ScrimMatchReportInfantryTeamRoundStats'))
 BEGIN
-    EXECUTE('CREATE VIEW View_ScrimMatchReportInfantryTeamRoundStats as SELECT 1 as x');
+	EXECUTE('CREATE VIEW View_ScrimMatchReportInfantryTeamRoundStats as SELECT 1 as x');
 END;
 
 GO
 
 ALTER VIEW View_ScrimMatchReportInfantryTeamRoundStats AS
--- CREATE OR ALTER VIEW View_ScrimMatchReportInfantryTeamRoundStats AS
 
   SELECT match_teams.ScrimMatchId,
          match_rounds.ScrimMatchRound,

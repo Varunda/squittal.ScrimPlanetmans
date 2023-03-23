@@ -36,6 +36,10 @@ namespace squittal.ScrimPlanetmans.App
 
             services.AddSignalR();
 
+            if (Configuration.GetValue<bool?>("PrintConfig") == true) {
+                Console.WriteLine($"{((IConfigurationRoot)Configuration).GetDebugView()}");
+            }
+
             services.AddDbContext<PlanetmansDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("PlanetmansDbContext"),
                                         sqlServerOptionsAction: sqlOptions =>
@@ -47,9 +51,8 @@ namespace squittal.ScrimPlanetmans.App
                                         })
                         .EnableSensitiveDataLogging(false));
 
-
             services.AddCensusServices(options =>
-                options.CensusServiceId = Environment.GetEnvironmentVariable("DaybreakGamesServiceKey", EnvironmentVariableTarget.User));
+                options.CensusServiceId = Configuration.GetValue<string>("DaybreakGamesServiceKey")); // This is bound from the environmental variables config provider
             services.AddCensusHelpers();
 
             services.AddSingleton<IDbContextHelper, DbContextHelper>();

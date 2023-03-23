@@ -121,6 +121,7 @@
                                         <th style="font-weight: 300; width: 65px;" title="Favorable Engagement Percent">Fav. Eng. %</th>
                                         <th style="font-weight: 300; width: 65px;" title="One vs One Engagement Percent">1v1 Eng. %</th>
                                         <th style="font-weight: 300; width: 60px;" title="One vs One Kill Death Ratio">1v1 KDR</th>
+                                        <th style="font-weight: 300; width: 60px;" title="Revives">Revives</th>
                                     </tr>
 
                                     <tr @onclick="() => OnClickTeamRow(team.TeamOrdinal)" class=" clickable-row @GetClickableTeamRowIsActiveClass(team.TeamOrdinal) @SqCssHelper.GetFactionClassFromId(_playerStats.Where(p => p.TeamOrdinal == team.TeamOrdinal).Select(p => p.FactionId).FirstOrDefault())" style="color: var(--sq-ps2-primary); font-size: 0.9rem; background-color: transparent; border-bottom: 2px solid var(--sq-ps2-primary-light); text-align: right; border-top: none !important; vertical-align: baseline; line-height: 1.2rem;">
@@ -140,6 +141,7 @@
                                         <td style="padding-top: 0px;" title="@team.FavorableEngagementCount / @team.WeightedEnemyEngagementCount">@team.WeightedFavorableEngagementPercent3<span style="font-size: smaller;">%</span></td>
                                         <td style="padding-top: 0px;" title="@team.OneVsOneCount / @team.EnemyKillDeathEngagementCount">@team.OneVsOneEngagementPercent<span style="font-size: smaller;">%</span></td>
                                         <td style="padding-top: 0px;" title="@team.UnassistedKills / @team.UnassistedEnemyDeaths ">@team.OneVsOneKillDeathRatio</td>
+                                        <td style="padding-top: 0px;" title="@team.Revives">@team.Revives</td>
                                     </tr>
 
                                     @if (_expandedRoundTeams.Contains(team.TeamOrdinal))
@@ -168,6 +170,7 @@
                                                         <td title="@teamRoundStats.FavorableEngagementCount / @teamRoundStats.WeightedEnemyEngagementCount">@teamRoundStats.WeightedFavorableEngagementPercent3<span style="font-size: smaller;">%</span></td>
                                                         <td title="@teamRoundStats.OneVsOneCount / @teamRoundStats.EnemyKillDeathEngagementCount">@teamRoundStats.OneVsOneEngagementPercent<span style="font-size: smaller;">%</span></td>
                                                         <td title="@teamRoundStats.UnassistedKills / @teamRoundStats.UnassistedEnemyDeaths ">@teamRoundStats.OneVsOneKillDeathRatio</td>
+                                                        <td>@teamRoundStats.Revives</td>
                                                     }
                                                 }
                                                 else
@@ -223,6 +226,7 @@
                                             <td @onclick="() => OnClickPlayerRow(player.CharacterId)" title="@player.FavorableEngagementCount / @player.WeightedEnemyEngagementCount">@player.WeightedFavorableEngagementPercent3<span style="font-size: smaller; padding-left: 1px;">%</span></td>
                                             <td @onclick="() => OnClickPlayerRow(player.CharacterId)" title="@player.OneVsOneCount / @player.EnemyKillDeathEngagementCount">@player.OneVsOneEngagementPercent<span style="font-size: smaller; padding-left: 1px;">%</span></td>
                                             <td @onclick="() => OnClickPlayerRow(player.CharacterId)" title="@player.UnassistedKills / @player.UnassistedEnemyDeaths">@player.OneVsOneKillDeathRatio</td>
+                                            <td>@player.Revives</td>
                                         </tr>
 
                                         @if (_expandedRoundPlayers.Contains(player.CharacterId))
@@ -262,6 +266,7 @@
                                         <td title="@playerRoundStats.FavorableEngagementCount / @playerRoundStats.WeightedEnemyEngagementCount">@playerRoundStats.WeightedFavorableEngagementPercent3<span style="font-size: smaller;">%</span></td>
                                         <td title="@playerRoundStats.OneVsOneCount / @playerRoundStats.EnemyKillDeathEngagementCount">@playerRoundStats.OneVsOneEngagementPercent<span style="font-size: smaller;">%</span></td>
                                         <td title="@playerRoundStats.UnassistedKills / @playerRoundStats.UnassistedEnemyDeaths ">@playerRoundStats.OneVsOneKillDeathRatio</td>
+                                        <td>@playerRoundStats.Revives</td>
                                     }
                                 }
                                 else

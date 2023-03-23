@@ -14,9 +14,9 @@ namespace squittal.ScrimPlanetmans.Logging
         public async static Task<bool> WriteToJsonFile(string fileName, JsonRuleset ruleset)
         {
             var basePath = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
-            var rulesetsDirectory = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", "..\\rulesets"));
+            var rulesetsDirectory = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", "../rulesets"));
 
-            var path = fileName.EndsWith(".json") ? $"{rulesetsDirectory}\\{fileName}" : $"{rulesetsDirectory}\\{fileName}.json";
+            var path = fileName.EndsWith(".json") ? $"{rulesetsDirectory}/{fileName}" : $"{rulesetsDirectory}/{fileName}.json";
 
             try
             {
@@ -32,8 +32,9 @@ namespace squittal.ScrimPlanetmans.Logging
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"{ex}");
                 return false;
             }
         }
@@ -41,9 +42,9 @@ namespace squittal.ScrimPlanetmans.Logging
         public async static Task<JsonRuleset> ReadFromJsonFile(string fileName)
         {
             var basePath = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
-            var rulesetsDirectory = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", "..\\rulesets"));
+            var rulesetsDirectory = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", "../rulesets"));
 
-            var path = fileName.EndsWith(".json") ? $"{rulesetsDirectory}\\{fileName}" : $"{rulesetsDirectory}\\{fileName}.json";
+            var path = fileName.EndsWith(".json") ? $"{rulesetsDirectory}/{fileName}" : $"{rulesetsDirectory}/{fileName}.json";
 
             try
             {
@@ -65,29 +66,24 @@ namespace squittal.ScrimPlanetmans.Logging
         public static IEnumerable<string> GetJsonRulesetFileNames()
         {
             var basePath = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
-            var rulesetsDirectory = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", "..\\rulesets"));
+            var rulesetsDirectory = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", "../rulesets"));
 
             var rulesets = new List<string>();
 
             try
             {
-                var files = Directory.GetFiles(rulesetsDirectory);
+                string[] files = Directory.GetFiles(rulesetsDirectory)
+                    .Where(iter => iter.EndsWith(".json")).ToArray();
 
-                foreach (var file in files)
-                {
-                    if (!file.EndsWith(".json"))
-                    {
-                        continue;
-                    }
-
+                foreach (string file in files) {
                     rulesets.Add(Path.GetFileName(file));
                 }
 
                 return rulesets.OrderBy(f => f).ToList();
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore
+                Console.WriteLine($"{ex}");
                 return null;
             }
         }
