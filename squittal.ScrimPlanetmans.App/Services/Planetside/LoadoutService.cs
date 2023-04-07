@@ -104,8 +104,8 @@ namespace squittal.ScrimPlanetmans.Services.Planetside
             var dbContext = factory.GetDbContext();
 
             var storedEntities = await dbContext.Loadouts.ToListAsync();
-
-            foreach (var censusEntity in censusEntities)
+            //The Census API Returns sometime Loadouts with the same Id multiple Times => Distinct
+            foreach (var censusEntity in censusEntities.DistinctBy(x => x.Id))
             {
                 var storeEntity = storedEntities.FirstOrDefault(e => e.Id == censusEntity.Id);
                 if (storeEntity == null)
