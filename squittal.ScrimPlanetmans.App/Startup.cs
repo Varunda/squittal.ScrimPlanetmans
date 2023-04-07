@@ -48,7 +48,7 @@ namespace squittal.ScrimPlanetmans.App
                                                 maxRetryDelay: TimeSpan.FromSeconds(30),
                                                 errorNumbersToAdd: null);
                                         })
-                        .EnableSensitiveDataLogging(false));
+                        .EnableSensitiveDataLogging(true));
 
             services.AddCensusServices(options =>
                 options.CensusServiceId = Configuration.GetValue<string>("DaybreakGamesServiceKey")); // This is bound from the environmental variables config provider

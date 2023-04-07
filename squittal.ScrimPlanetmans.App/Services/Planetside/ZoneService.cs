@@ -151,7 +151,7 @@ namespace squittal.ScrimPlanetmans.Services.Planetside
 
             if (zones != null && zones.Any())
             {
-                var censusEntities = zones.Select(ConvertToDbModel);
+                var censusEntities = zones.Select(x => ConvertToDbModel(x));
 
                 using (var factory = _dbContextHelper.GetFactory())
                 {
@@ -193,14 +193,23 @@ namespace squittal.ScrimPlanetmans.Services.Planetside
 
         public static Zone ConvertToDbModel(CensusZoneModel censusModel)
         {
-            return new Zone
+            try
             {
-                Id = censusModel.ZoneId,
-                Name = censusModel.Name.English,
-                Description = censusModel.Description.English,
-                Code = censusModel.Code,
-                HexSize = censusModel.HexSize
-            };
+
+                return new Zone
+                {
+                    Id = censusModel.ZoneId,
+                    Name = censusModel.Name.English,
+                    Description = censusModel.Description?.English ?? "",
+                    Code = censusModel.Code,
+                    HexSize = censusModel.HexSize
+                };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         public async Task<int> GetCensusCountAsync()
