@@ -106,7 +106,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="150.18208.0" />
+    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="170.13.0" />
     <PackageReference Include="Websocket.Client" Version="4.4.43" />
   </ItemGroup>
 
