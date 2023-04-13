@@ -21,13 +21,15 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
 
         private readonly int _scrimMatchBrowserPageSize = 15;
 
-        public ScrimMatchReportDataService(IDbContextHelper dbContextHelper, ILogger<ScrimMatchReportDataService> logger)
+        public ScrimMatchReportDataService(IDbContextHelper dbContextHelper,
+            ILogger<ScrimMatchReportDataService> logger)
         {
             _dbContextHelper = dbContextHelper;
             _logger = logger;
         }
 
-        public async Task<PaginatedList<ScrimMatchInfo>> GetHistoricalScrimMatchesListAsync(int? pageIndex, ScrimMatchReportBrowserSearchFilter searchFilter, CancellationToken cancellationToken)
+        public async Task<PaginatedList<ScrimMatchInfo>> GetHistoricalScrimMatchesListAsync(int? pageIndex,
+            ScrimMatchReportBrowserSearchFilter searchFilter, CancellationToken cancellationToken)
         {
             try
             {
@@ -35,8 +37,8 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 var scrimMatchesQuery = dbContext.ScrimMatchInfo
-                                                    .Where(GetHistoricalScrimMatchBrowserWhereExpression(searchFilter))
-                                                    .AsQueryable();
+                    //.Where(GetHistoricalScrimMatchBrowserWhereExpression(searchFilter))
+                    .AsQueryable();
 
                 var paginatedList = await PaginatedList<ScrimMatchInfo>.CreateAsync(scrimMatchesQuery.AsNoTracking().OrderByDescending(m => m.StartTime), pageIndex ?? 1, _scrimMatchBrowserPageSize, cancellationToken);
 
@@ -67,12 +69,13 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             catch (Exception ex)
             {
                 _logger.LogError($"{ex}");
-                
+
                 return null;
             }
         }
 
-        private Expression<Func<ScrimMatchInfo, bool>> GetHistoricalScrimMatchBrowserWhereExpression(ScrimMatchReportBrowserSearchFilter searchFilter)
+        private Expression<Func<ScrimMatchInfo, bool>> GetHistoricalScrimMatchBrowserWhereExpression(
+            ScrimMatchReportBrowserSearchFilter searchFilter)
         {
             var isDefaultFilter = searchFilter.IsDefaultFilter;
 
@@ -80,7 +83,8 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
 
             if (isDefaultFilter)
             {
-                Expression<Func<ScrimMatchInfo, bool>> roundExpression = m => m.RoundCount >= searchFilter.MinimumRoundCount;
+                Expression<Func<ScrimMatchInfo, bool>> roundExpression =
+                    m => m.RoundCount >= searchFilter.MinimumRoundCount;
 
                 var twoHoursAgo = DateTime.UtcNow - TimeSpan.FromHours(2);
                 Expression<Func<ScrimMatchInfo, bool>> recentMatchExpression = m => m.StartTime >= twoHoursAgo;
@@ -91,21 +95,26 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             }
             else
             {
-                Expression<Func<ScrimMatchInfo, bool>> roundExpression = m => m.RoundCount >= searchFilter.MinimumRoundCount;
+                Expression<Func<ScrimMatchInfo, bool>> roundExpression =
+                    m => m.RoundCount >= searchFilter.MinimumRoundCount;
 
                 whereExpression = whereExpression == null ? roundExpression : whereExpression.And(roundExpression);
             }
 
             if (searchFilter.SearchStartDate != null)
             {
-                Expression<Func<ScrimMatchInfo, bool>> startDateExpression = m => m.StartTime >= searchFilter.SearchStartDate;
+                Expression<Func<ScrimMatchInfo, bool>> startDateExpression =
+                    m => m.StartTime >= searchFilter.SearchStartDate;
 
-                whereExpression = whereExpression == null ? startDateExpression : whereExpression.And(startDateExpression);
+                whereExpression = whereExpression == null
+                    ? startDateExpression
+                    : whereExpression.And(startDateExpression);
             }
 
             if (searchFilter.SearchEndDate != null)
             {
-                Expression<Func<ScrimMatchInfo, bool>> endDateExpression = m => m.StartTime <= searchFilter.SearchEndDate;
+                Expression<Func<ScrimMatchInfo, bool>> endDateExpression =
+                    m => m.StartTime <= searchFilter.SearchEndDate;
 
                 whereExpression = whereExpression == null ? endDateExpression : whereExpression.And(endDateExpression);
             }
@@ -130,7 +139,9 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                     facilityExpression = m => m.FacilityId == searchFilter.FacilityId;
                 }
 
-                whereExpression = whereExpression == null ? facilityExpression : whereExpression.And(facilityExpression);
+                whereExpression = whereExpression == null
+                    ? facilityExpression
+                    : whereExpression.And(facilityExpression);
             }
 
             if (searchFilter.WorldId != 0)
@@ -148,7 +159,9 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
 
                 foreach (var term in searchFilter.SearchTermsList)
                 {
-                    Expression<Func<ScrimMatchInfo, bool>> exp = m => m.Title.Contains(term); // DbFunctionsExtensions.Like(EF.Functions, m.Title, "%" + term + "%");
+                    Expression<Func<ScrimMatchInfo, bool>>
+                        exp = m => m.Title
+                            .Contains(term); // DbFunctionsExtensions.Like(EF.Functions, m.Title, "%" + term + "%");
                     searchTermsExpression = searchTermsExpression == null ? exp : searchTermsExpression.Or(exp);
                 }
 
@@ -157,11 +170,16 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
 
                 foreach (var term in searchFilter.AliasSearchTermsList)
                 {
-                    Expression<Func<ScrimMatchInfo, bool>> exp = m => m.ScrimMatchId.Contains(term); // DbFunctionsExtensions.Like(EF.Functions, m.ScrimMatchId, "%" + term + "%");
+                    Expression<Func<ScrimMatchInfo, bool>>
+                        exp = m => m.ScrimMatchId
+                            .Contains(
+                                term); // DbFunctionsExtensions.Like(EF.Functions, m.ScrimMatchId, "%" + term + "%");
                     aliasTermsExpression = aliasTermsExpression == null ? exp : aliasTermsExpression.And(exp);
                 }
 
-                termsExpresion = termsExpresion == null ? aliasTermsExpression : termsExpresion.Or(aliasTermsExpression);
+                termsExpresion = termsExpresion == null
+                    ? aliasTermsExpression
+                    : termsExpresion.Or(aliasTermsExpression);
 
                 whereExpression = whereExpression == null ? termsExpresion : whereExpression.And(termsExpresion);
             }
@@ -169,14 +187,16 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             return whereExpression;
         }
 
-        public async Task<ScrimMatchInfo> GetHistoricalScrimMatchInfoAsync(string scrimMatchId, CancellationToken cancellationToken)
+        public async Task<ScrimMatchInfo> GetHistoricalScrimMatchInfoAsync(string scrimMatchId,
+            CancellationToken cancellationToken)
         {
             try
             {
                 using var factory = _dbContextHelper.GetFactory();
                 var dbContext = factory.GetDbContext();
 
-                var scrimMatchInfo = await dbContext.ScrimMatchInfo.Where(m => m.ScrimMatchId == scrimMatchId).FirstOrDefaultAsync(cancellationToken);
+                var scrimMatchInfo = await dbContext.ScrimMatchInfo.Where(m => m.ScrimMatchId == scrimMatchId)
+                    .FirstOrDefaultAsync(cancellationToken);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -189,12 +209,14 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             }
             catch (TaskCanceledException)
             {
-                _logger.LogInformation($"Task Request cancelled: GetHistoricalScrimMatchInfoAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Task Request cancelled: GetHistoricalScrimMatchInfoAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation($"Request cancelled: GetHistoricalScrimMatchInfoAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Request cancelled: GetHistoricalScrimMatchInfoAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (Exception ex)
@@ -205,7 +227,8 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             }
         }
 
-        public async Task<IEnumerable<int>> GetScrimMatchBrowserFacilityIdsListAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<int>> GetScrimMatchBrowserFacilityIdsListAsync(
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -213,10 +236,10 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 var distinctFacilityIds = await dbContext.ScrimMatchInfo
-                                                        .Where(m => m.FacilityId != null)
-                                                        .Select(m => (int)m.FacilityId)
-                                                        .Distinct()
-                                                        .ToListAsync(cancellationToken);
+                    .Where(m => m.FacilityId != null)
+                    .Select(m => (int)m.FacilityId)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -240,7 +263,8 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             }
         }
 
-        public async Task<IEnumerable<Ruleset>> GetScrimMatchBrowseRulesetIdsListAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<Ruleset>> GetScrimMatchBrowseRulesetIdsListAsync(
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -248,9 +272,9 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 var distinctRulesetIds = await dbContext.ScrimMatchInfo
-                                                            .Select(m => m.RulesetId)
-                                                            .Distinct()
-                                                            .ToListAsync(cancellationToken);
+                    .Select(m => m.RulesetId)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -260,13 +284,12 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 }
 
                 var distinctRulesets = await dbContext.Rulesets
-                                                            .Where(r => distinctRulesetIds.Contains(r.Id))
-                                                            .ToListAsync(cancellationToken);
+                    .Where(r => distinctRulesetIds.Contains(r.Id))
+                    .ToListAsync(cancellationToken);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
                 return distinctRulesets;
-                
             }
             catch (TaskCanceledException)
             {
@@ -295,7 +318,8 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             };
         }
 
-        public async Task<IEnumerable<ScrimMatchReportInfantryPlayerStats>>  GetHistoricalScrimMatchInfantryPlayerStatsAsync(string scrimMatchId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<ScrimMatchReportInfantryPlayerStats>>
+            GetHistoricalScrimMatchInfantryPlayerStatsAsync(string scrimMatchId, CancellationToken cancellationToken)
         {
             try
             {
@@ -303,20 +327,21 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 return await dbContext.ScrimMatchReportInfantryPlayerStats
-                                        .AsNoTracking()
-                                        .Where(e => e.ScrimMatchId == scrimMatchId)
-                                        .OrderBy(e => e.NameDisplay)
-                                        .ToListAsync(cancellationToken);
-
+                    .AsNoTracking()
+                    .Where(e => e.ScrimMatchId == scrimMatchId)
+                    .OrderBy(e => e.NameDisplay)
+                    .ToListAsync(cancellationToken);
             }
             catch (TaskCanceledException)
             {
-                _logger.LogInformation($"Task Request cancelled: GetHistoricalScrimMatchInfantryPlayerStatsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Task Request cancelled: GetHistoricalScrimMatchInfantryPlayerStatsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation($"Request cancelled: GetHistoricalScrimMatchInfantryPlayerStatsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Request cancelled: GetHistoricalScrimMatchInfantryPlayerStatsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (Exception ex)
@@ -327,7 +352,9 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             }
         }
 
-        public async Task<IEnumerable<ScrimMatchReportInfantryPlayerRoundStats>> GetHistoricalScrimMatchInfantryPlayerRoundStatsAsync(string scrimMatchId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<ScrimMatchReportInfantryPlayerRoundStats>>
+            GetHistoricalScrimMatchInfantryPlayerRoundStatsAsync(string scrimMatchId,
+                CancellationToken cancellationToken)
         {
             try
             {
@@ -335,21 +362,22 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 return await dbContext.ScrimMatchReportInfantryPlayerRoundStats
-                                        .AsNoTracking()
-                                        .Where(e => e.ScrimMatchId == scrimMatchId)
-                                        .OrderBy(e => e.NameDisplay)
-                                        .ThenBy(e => e.ScrimMatchRound)
-                                        .ToListAsync(cancellationToken);
-
+                    .AsNoTracking()
+                    .Where(e => e.ScrimMatchId == scrimMatchId)
+                    .OrderBy(e => e.NameDisplay)
+                    .ThenBy(e => e.ScrimMatchRound)
+                    .ToListAsync(cancellationToken);
             }
             catch (TaskCanceledException)
             {
-                _logger.LogInformation($"Task Request cancelled: GetHistoricalScrimMatchInfantryPlayerRoundStatsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Task Request cancelled: GetHistoricalScrimMatchInfantryPlayerRoundStatsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation($"Request cancelled: GetHistoricalScrimMatchInfantryPlayerRoundStatsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Request cancelled: GetHistoricalScrimMatchInfantryPlayerRoundStatsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (Exception ex)
@@ -360,7 +388,8 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             }
         }
 
-        public async Task<IEnumerable<ScrimMatchReportInfantryTeamStats>> GetHistoricalScrimMatchInfantryTeamStatsAsync(string scrimMatchId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<ScrimMatchReportInfantryTeamStats>> GetHistoricalScrimMatchInfantryTeamStatsAsync(
+            string scrimMatchId, CancellationToken cancellationToken)
         {
             try
             {
@@ -368,19 +397,21 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 return await dbContext.ScrimMatchReportInfantryTeamStats
-                                        .AsNoTracking()
-                                        .Where(e => e.ScrimMatchId == scrimMatchId)
-                                        .OrderBy(e => e.TeamOrdinal)
-                                        .ToListAsync(cancellationToken);
+                    .AsNoTracking()
+                    .Where(e => e.ScrimMatchId == scrimMatchId)
+                    .OrderBy(e => e.TeamOrdinal)
+                    .ToListAsync(cancellationToken);
             }
             catch (TaskCanceledException)
             {
-                _logger.LogInformation($"Task Request cancelled: GetHistoricalScrimMatchInfantryTeamStatsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Task Request cancelled: GetHistoricalScrimMatchInfantryTeamStatsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation($"Request cancelled: GetHistoricalScrimMatchInfantryTeamStatsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Request cancelled: GetHistoricalScrimMatchInfantryTeamStatsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (Exception ex)
@@ -390,8 +421,9 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 return null;
             }
         }
-        
-        public async Task<IEnumerable<ScrimMatchReportInfantryTeamRoundStats>> GetHistoricalScrimMatchInfantryTeamRoundStatsAsync(string scrimMatchId, CancellationToken cancellationToken)
+
+        public async Task<IEnumerable<ScrimMatchReportInfantryTeamRoundStats>>
+            GetHistoricalScrimMatchInfantryTeamRoundStatsAsync(string scrimMatchId, CancellationToken cancellationToken)
         {
             try
             {
@@ -399,20 +431,22 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 return await dbContext.ScrimMatchReportInfantryTeamRoundStats
-                                        .AsNoTracking()
-                                        .Where(e => e.ScrimMatchId == scrimMatchId)
-                                        .OrderBy(e => e.TeamOrdinal)
-                                        .ThenBy(e => e.ScrimMatchRound)
-                                        .ToListAsync(cancellationToken);
+                    .AsNoTracking()
+                    .Where(e => e.ScrimMatchId == scrimMatchId)
+                    .OrderBy(e => e.TeamOrdinal)
+                    .ThenBy(e => e.ScrimMatchRound)
+                    .ToListAsync(cancellationToken);
             }
             catch (TaskCanceledException)
             {
-                _logger.LogInformation($"Task Request cancelled: GetHistoricalScrimMatchInfantryTeamStatsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Task Request cancelled: GetHistoricalScrimMatchInfantryTeamStatsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation($"Request cancelled: GetHistoricalScrimMatchInfantryTeamStatsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Request cancelled: GetHistoricalScrimMatchInfantryTeamStatsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (Exception ex)
@@ -423,7 +457,8 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             }
         }
 
-        public async Task<IEnumerable<ScrimMatchReportInfantryDeath>> GetHistoricalScrimMatchInfantryDeathsAsync(string scrimMatchId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<ScrimMatchReportInfantryDeath>> GetHistoricalScrimMatchInfantryDeathsAsync(
+            string scrimMatchId, CancellationToken cancellationToken)
         {
             try
             {
@@ -431,19 +466,21 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 return await dbContext.ScrimMatchReportInfantryDeaths
-                                        .AsNoTracking()
-                                        .Where(e => e.ScrimMatchId == scrimMatchId)
-                                        .OrderByDescending(e => e.Timestamp)
-                                        .ToListAsync(cancellationToken);
+                    .AsNoTracking()
+                    .Where(e => e.ScrimMatchId == scrimMatchId)
+                    .OrderByDescending(e => e.Timestamp)
+                    .ToListAsync(cancellationToken);
             }
             catch (TaskCanceledException)
             {
-                _logger.LogInformation($"Task Request cancelled: GetHistoricalScrimMatchInfantryDeathsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Task Request cancelled: GetHistoricalScrimMatchInfantryDeathsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation($"Request cancelled: GetHistoricalScrimMatchInfantryDeathsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Request cancelled: GetHistoricalScrimMatchInfantryDeathsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (Exception ex)
@@ -454,7 +491,8 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             }
         }
 
-        public async Task<IEnumerable<ScrimMatchReportInfantryDeath>> GetHistoricalScrimMatchInfantryPlayerDeathsAsync(string scrimMatchId, string characterId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<ScrimMatchReportInfantryDeath>> GetHistoricalScrimMatchInfantryPlayerDeathsAsync(
+            string scrimMatchId, string characterId, CancellationToken cancellationToken)
         {
             try
             {
@@ -462,21 +500,23 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 return await dbContext.ScrimMatchReportInfantryDeaths
-                                        .AsNoTracking()
-                                        .Where(e => e.ScrimMatchId == scrimMatchId
-                                                    && ( e.AttackerCharacterId == characterId
-                                                         || e.VictimCharacterId == characterId ) )
-                                        .OrderByDescending(e => e.Timestamp)
-                                        .ToListAsync(cancellationToken);
+                    .AsNoTracking()
+                    .Where(e => e.ScrimMatchId == scrimMatchId
+                                && (e.AttackerCharacterId == characterId
+                                    || e.VictimCharacterId == characterId))
+                    .OrderByDescending(e => e.Timestamp)
+                    .ToListAsync(cancellationToken);
             }
             catch (TaskCanceledException)
             {
-                _logger.LogInformation($"Task Request cancelled: GetHistoricalScrimMatchInfantryDeathsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Task Request cancelled: GetHistoricalScrimMatchInfantryDeathsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation($"Request cancelled: GetHistoricalScrimMatchInfantryDeathsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Request cancelled: GetHistoricalScrimMatchInfantryDeathsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (Exception ex)
@@ -487,7 +527,9 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             }
         }
 
-        public async Task<IEnumerable<ScrimMatchReportInfantryPlayerHeadToHeadStats>> GetHistoricalScrimMatchInfantryPlayerHeadToHeadStatsAsync(string scrimMatchId, string characterId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<ScrimMatchReportInfantryPlayerHeadToHeadStats>>
+            GetHistoricalScrimMatchInfantryPlayerHeadToHeadStatsAsync(string scrimMatchId, string characterId,
+                CancellationToken cancellationToken)
         {
             try
             {
@@ -495,21 +537,23 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 return await dbContext.ScrimMatchReportInfantryPlayerHeadToHeadStats
-                                        .AsNoTracking()
-                                        .Where(e => e.ScrimMatchId == scrimMatchId
-                                                    && e.PlayerCharacterId == characterId)
-                                        .OrderByDescending(e => e.PlayerTeamOrdinal != e.OpponentTeamOrdinal)
-                                        .ThenBy(e => e.OpponentNameDisplay)
-                                        .ToListAsync(cancellationToken);
+                    .AsNoTracking()
+                    .Where(e => e.ScrimMatchId == scrimMatchId
+                                && e.PlayerCharacterId == characterId)
+                    .OrderByDescending(e => e.PlayerTeamOrdinal != e.OpponentTeamOrdinal)
+                    .ThenBy(e => e.OpponentNameDisplay)
+                    .ToListAsync(cancellationToken);
             }
             catch (TaskCanceledException)
             {
-                _logger.LogInformation($"Task Request cancelled: GetHistoricalScrimMatchInfantryPlayerHeadToHeadStatsAsync scrimMatchId {scrimMatchId} characterId {characterId}");
+                _logger.LogInformation(
+                    $"Task Request cancelled: GetHistoricalScrimMatchInfantryPlayerHeadToHeadStatsAsync scrimMatchId {scrimMatchId} characterId {characterId}");
                 return null;
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation($"Request cancelled: GetHistoricalScrimMatchInfantryPlayerHeadToHeadStatsAsync scrimMatchId {scrimMatchId} characterId {characterId}");
+                _logger.LogInformation(
+                    $"Request cancelled: GetHistoricalScrimMatchInfantryPlayerHeadToHeadStatsAsync scrimMatchId {scrimMatchId} characterId {characterId}");
                 return null;
             }
             catch (Exception ex)
@@ -520,7 +564,9 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             }
         }
 
-        public async Task<IEnumerable<ScrimMatchReportInfantryPlayerClassEventCounts>> GetHistoricalScrimMatchInfantryPlayeClassEventCountsAsync(string scrimMatchId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<ScrimMatchReportInfantryPlayerClassEventCounts>>
+            GetHistoricalScrimMatchInfantryPlayeClassEventCountsAsync(string scrimMatchId,
+                CancellationToken cancellationToken)
         {
             try
             {
@@ -528,20 +574,22 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 return await dbContext.ScrimMatchReportInfantryPlayerClassEventCounts
-                                        .AsNoTracking()
-                                        .Where(e => e.ScrimMatchId == scrimMatchId)
-                                        .OrderByDescending(e => e.TeamOrdinal)
-                                        .ThenBy(e => e.NameDisplay)
-                                        .ToListAsync(cancellationToken);
+                    .AsNoTracking()
+                    .Where(e => e.ScrimMatchId == scrimMatchId)
+                    .OrderByDescending(e => e.TeamOrdinal)
+                    .ThenBy(e => e.NameDisplay)
+                    .ToListAsync(cancellationToken);
             }
             catch (TaskCanceledException)
             {
-                _logger.LogInformation($"Task Request cancelled: GetHistoricalScrimMatchInfantryPlayeClassEventCountsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Task Request cancelled: GetHistoricalScrimMatchInfantryPlayeClassEventCountsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation($"Request cancelled: GetHistoricalScrimMatchInfantryPlayeClassEventCountsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Request cancelled: GetHistoricalScrimMatchInfantryPlayeClassEventCountsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (Exception ex)
@@ -552,7 +600,9 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
             }
         }
 
-        public async Task<IEnumerable<ScrimMatchReportInfantryPlayerWeaponStats>> GetHistoricalScrimMatchInfantryPlayerWeaponStatsAsync(string scrimMatchId, string characterId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<ScrimMatchReportInfantryPlayerWeaponStats>>
+            GetHistoricalScrimMatchInfantryPlayerWeaponStatsAsync(string scrimMatchId, string characterId,
+                CancellationToken cancellationToken)
         {
             try
             {
@@ -560,22 +610,24 @@ namespace squittal.ScrimPlanetmans.Services.ScrimMatchReports
                 var dbContext = factory.GetDbContext();
 
                 return await dbContext.ScrimMatchReportInfantryPlayerWeaponStats
-                                        .AsNoTracking()
-                                        .Where(e => e.ScrimMatchId == scrimMatchId
-                                                    && e.CharacterId == characterId)
-                                        .OrderByDescending(e => e.Kills)
-                                        .ThenByDescending(e => e.Deaths)
-                                        .ThenBy(e => e.WeaponName)
-                                        .ToListAsync(cancellationToken);
+                    .AsNoTracking()
+                    .Where(e => e.ScrimMatchId == scrimMatchId
+                                && e.CharacterId == characterId)
+                    .OrderByDescending(e => e.Kills)
+                    .ThenByDescending(e => e.Deaths)
+                    .ThenBy(e => e.WeaponName)
+                    .ToListAsync(cancellationToken);
             }
             catch (TaskCanceledException)
             {
-                _logger.LogInformation($"Task Request cancelled: GetHistoricalScrimMatchInfantryPlayeClassEventCountsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Task Request cancelled: GetHistoricalScrimMatchInfantryPlayeClassEventCountsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation($"Request cancelled: GetHistoricalScrimMatchInfantryPlayeClassEventCountsAsync scrimMatchId {scrimMatchId}");
+                _logger.LogInformation(
+                    $"Request cancelled: GetHistoricalScrimMatchInfantryPlayeClassEventCountsAsync scrimMatchId {scrimMatchId}");
                 return null;
             }
             catch (Exception ex)
