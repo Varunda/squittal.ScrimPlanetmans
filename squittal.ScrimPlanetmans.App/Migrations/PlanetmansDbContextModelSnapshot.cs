@@ -411,8 +411,28 @@ namespace squittal.ScrimPlanetmans.App.Migrations
                     b.Property<int>("ScrimMatchRound")
                         .HasColumnType("int");
 
+                    b.Property<bool?>("EnablePeriodicFacilityControlRewards")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool?>("EnableRoundTimeLimit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool?>("EndRoundOnPointValueReached")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<int?>("FacilityId")
                         .HasColumnType("int");
+
+                    b.Property<int?>("InitialPoints")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(null);
 
                     b.Property<bool>("IsManualWorldId")
                         .ValueGeneratedOnAdd()
@@ -424,8 +444,36 @@ namespace squittal.ScrimPlanetmans.App.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<int>("MatchWinCondition")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int?>("PeriodicFacilityControlInterval")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(null);
+
+                    b.Property<int?>("PeriodicFacilityControlPoints")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(null);
+
                     b.Property<int>("RoundSecondsTotal")
                         .HasColumnType("int");
+
+                    b.Property<int?>("RoundTimerDirection")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoundWinCondition")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int?>("TargetPointValue")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(null);
 
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");

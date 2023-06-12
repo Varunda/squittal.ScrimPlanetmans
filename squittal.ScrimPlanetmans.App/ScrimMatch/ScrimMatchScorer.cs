@@ -18,6 +18,8 @@ namespace squittal.ScrimPlanetmans.ScrimMatch
 
         private Ruleset _activeRuleset;
 
+        private int? _periodicControlPointsValue;
+
         public ScrimMatchScorer(IScrimRulesetManager rulesets, IScrimTeamsManager teamsManager, IScrimMessageBroadcastService messageService, ILogger<ScrimMatchEngine> logger)
         {
             _rulesets = rulesets;
@@ -27,6 +29,7 @@ namespace squittal.ScrimPlanetmans.ScrimMatch
 
             _messageService.RaiseActiveRulesetChangeEvent += OnActiveRulesetChangeEvent;
             _messageService.RaiseRulesetRuleChangeEvent += OnRulesetRuleChangeEvent;
+            _messageService.RaiseMatchConfigurationUpdateEvent += OnMatchConfigurationUpdateEvent;
         }
 
         private async void OnActiveRulesetChangeEvent(object sender, ScrimMessageEventArgs<ActiveRulesetChangeMessage> e)
@@ -42,6 +45,14 @@ namespace squittal.ScrimPlanetmans.ScrimMatch
             }
 
             // TODO: specific methods for only updating Rule Type that changed (Action Rules or Item Category Rules)
+        }
+
+        private void OnMatchConfigurationUpdateEvent(object sender, ScrimMessageEventArgs<MatchConfigurationUpdateMessage> e)
+        {
+            var message = e.Message;
+            var matchConfiguration = message.MatchConfiguration;
+
+            _periodicControlPointsValue = matchConfiguration.PeriodicFacilityControlPoints;
         }
 
         public async Task SetActiveRulesetAsync()
@@ -286,23 +297,34 @@ namespace squittal.ScrimPlanetmans.ScrimMatch
                 RevivesTaken = 1
             };
 
+            // Additional same-team check is becasue players could technically be on different
+            // factions but the same scrim team
+            var lastKilledByPlayer = revive.LastKilledByPlayer; // _teamsManager.GetLastKilledByPlayer(revive.RevivedPlayer.Id);
+            var lastDeathWasToEnemy = !_teamsManager.DoPlayersShareTeam(revive.RevivedPlayer, lastKilledByPlayer);
+
             var enemyActionType = revive.ActionType == ScrimActionType.ReviveMax
                             ? ScrimActionType.EnemyRevivedMax
                             : ScrimActionType.EnemyRevivedInfantry;
             
+            // if there was a revive experience event, but lastKilledByPlayer is null, then the player was killed via Outside Interference
+            if (lastKilledByPlayer == null)
+            {
+                enemyActionType = ScrimActionType.OutsideInterference;
+            }
+
             var enemyScoringResult = GetActionRulePoints(enemyActionType);
             var enemyPoints = enemyScoringResult.Points;
-            
-            // Additional same-team check is becasue players could technically be on different
-            // factions but the same scrim team
-            var lastKilledByPlayer = _teamsManager.GetLastKilledByPlayer(revive.RevivedPlayer.Id);
-            var lastDeathWasToEnemy = !_teamsManager.DoPlayersShareTeam(revive.RevivedPlayer, lastKilledByPlayer);
+
+            //// Additional same-team check is becasue players could technically be on different
+            //// factions but the same scrim team
+            //var lastKilledByPlayer = revive.LastKilledByPlayer; // _teamsManager.GetLastKilledByPlayer(revive.RevivedPlayer.Id);
+            //var lastDeathWasToEnemy = !_teamsManager.DoPlayersShareTeam(revive.RevivedPlayer, lastKilledByPlayer);
 
             var enemyReviveUpdate = new ScrimEventAggregate()
             {
                 Points = enemyPoints,
                 NetScore = enemyPoints,
-                EnemyRevivesAllowed = 1,
+                EnemyRevivesAllowed = (lastKilledByPlayer != null && lastDeathWasToEnemy) ? 1 : 0, //1,
                 KillsUndoneByRevive = (lastKilledByPlayer != null && lastDeathWasToEnemy) ? 1 : 0
             };
 
@@ -604,6 +626,11 @@ namespace squittal.ScrimPlanetmans.ScrimMatch
 
         private int? GetPeriodicControlPoints()
         {
+            if (_periodicControlPointsValue.HasValue)
+            {
+                return _periodicControlPointsValue;
+            }
+            
             return _activeRuleset.PeriodicFacilityControlPoints;
         }
 
