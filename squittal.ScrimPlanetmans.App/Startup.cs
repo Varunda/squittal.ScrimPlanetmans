@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using squittal.ScrimPlanetmans.CensusServices;
 using squittal.ScrimPlanetmans.CensusStream;
 using squittal.ScrimPlanetmans.Data;
@@ -31,25 +32,35 @@ namespace squittal.ScrimPlanetmans.App
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+
+            // this is fine here, we just need a logger and no other services have been configured yet
+#pragma warning disable ASP0000 // Do not call 'IServiceCollection.BuildServiceProvider' in 'ConfigureServices'
+            ILogger<Startup> logger = services.BuildServiceProvider().GetRequiredService<ILogger<Startup>>();
+#pragma warning restore ASP0000 // Do not call 'IServiceCollection.BuildServiceProvider' in 'ConfigureServices'
+
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
             services.AddSignalR();
 
             if (Configuration.GetValue<bool?>("PrintConfig") == true) {
-                Console.WriteLine($"{((IConfigurationRoot)Configuration).GetDebugView()}");
+                logger.LogInformation($"{((IConfigurationRoot)Configuration).GetDebugView()}");
             }
+
+            string connStr = Configuration.GetConnectionString("PlanetmansDbContext");
+            logger.LogInformation($"using connection from connection string 'PlanetmansDbContext': {connStr}");
+            logger.LogInformation($"service ID: {Configuration.GetValue<string>("DaybreakGamesServiceKey")}");
 
             services.AddDbContext<PlanetmansDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("PlanetmansDbContext"),
-                                        sqlServerOptionsAction: sqlOptions =>
-                                        {
-                                            sqlOptions.EnableRetryOnFailure(
-                                                maxRetryCount: 5,
-                                                maxRetryDelay: TimeSpan.FromSeconds(30),
-                                                errorNumbersToAdd: null);
-                                        })
-                        .EnableSensitiveDataLogging(false));
+                    sqlServerOptionsAction: sqlOptions => {
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(30),
+                            errorNumbersToAdd: null);
+                    }
+                ).EnableSensitiveDataLogging(false)
+            );
 
             services.AddCensusServices(options =>
                 options.CensusServiceId = Configuration.GetValue<string>("DaybreakGamesServiceKey")); // This is bound from the environmental variables config provider
