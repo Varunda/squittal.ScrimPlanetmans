@@ -341,7 +341,7 @@ healthchecksdb
 
 # squittal files to ignore
 match_logs/*.txt
-rulesets/*.json
+#rulesets/*.json
 /_stream test images
 /sql_adhoc/test_file.sql
 *.sql
