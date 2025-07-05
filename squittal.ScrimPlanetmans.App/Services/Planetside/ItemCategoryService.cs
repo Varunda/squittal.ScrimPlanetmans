@@ -442,7 +442,7 @@ namespace squittal.ScrimPlanetmans.Services.Planetside
             return new ItemCategory
             {
                 Id = id,
-                Name = itemCategory.Name.English,
+                Name = itemCategory.Name?.English ?? $"<no english name for {id}>",
                 IsWeaponCategory = isWeaponCategory,
                 Domain = domain
             };
@@ -450,9 +450,7 @@ namespace squittal.ScrimPlanetmans.Services.Planetside
 
         private static bool GetIsWeaponItemCategory(int itemCategoryId)
         {
-            return _nonWeaponItemCategoryIds.Contains(itemCategoryId)
-                        ? false
-                        : true;
+            return !_nonWeaponItemCategoryIds.Contains(itemCategoryId);
         }
 
         private static ItemCategoryDomain GetItemCategoryDomain(int itemCategoryId)

@@ -1,5 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using squittal.ScrimPlanetmans.Logging;
 using squittal.ScrimPlanetmans.Models;
 using squittal.ScrimPlanetmans.Services.Planetside;
@@ -8,6 +12,8 @@ namespace squittal.ScrimPlanetmans.Services
 {
     public class DatabaseMaintenanceService
     {
+        private readonly ILogger<DatabaseMaintenanceService> _Logger;
+
         private readonly IFacilityTypeService _facilityTypeService;
         private readonly IFacilityService _facilityService;
         private readonly IItemService _itemService;
@@ -47,9 +53,12 @@ namespace squittal.ScrimPlanetmans.Services
             IWorldService worldService,
             IFactionService factionService,
             IVehicleService vehicleService,
-            ISqlScriptRunner adhocScriptRunner
-            )
-        {
+            ISqlScriptRunner adhocScriptRunner,
+            ILogger<DatabaseMaintenanceService> logger
+        ) {
+
+            _Logger = logger;
+
             _facilityService = facilityService;
             _facilityTypeService = facilityTypeService;
             _itemService = itemService;
@@ -134,9 +143,20 @@ namespace squittal.ScrimPlanetmans.Services
             await Task.WhenAll(TaskList);
         }
 
-        public IEnumerable<string> GetAdHocSqlFileNames()
-        {
-            return SqlScriptFileHandler.GetAdHocSqlFileNames();
+        public IEnumerable<string> GetAdHocSqlFileNames() {
+            var basePath = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
+            var adhocScriptDirectory = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", "../sql_adhoc"));
+
+            try {
+                return Directory.GetFiles(adhocScriptDirectory)
+                    .Where(iter => iter.EndsWith(".sql"))
+                    .Select(Path.GetFileName)
+                    .OrderBy(f => f).ToList();
+            } catch (Exception ex) {
+                _Logger.LogError(ex, $"failed to get adhoc scripts");
+                // Ignore
+                return [];
+            }
         }
 
         public bool TryRunAdHocSqlScript(string fileName, out string info)
